@@ -1,25 +1,31 @@
+// index.js
+
 const express = require('express');
 const cors = require('cors');
+const dotenv = require('dotenv');
+const productosRouter = require('./routes/productos');
+const usersRouter = require('./routes/users');
+const errorHandler = require('./middlewares/errorMiddleware');
+
+dotenv.config(); // Cargar variables de entorno
 const app = express();
-const productosRouter = require('./productos');
-const usersRouter = require('./users');
-require('dotenv').config();
 
 // Middleware para parsear JSON
 app.use(express.json());
 
 // Configuración de CORS
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+app.use(cors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 
 // Rutas
-app.use('/productos', productosRouter);
-app.use('/api/usuario', usersRouter);
+app.use('/productos', productosRouter); // CRUD de productos
+app.use('/api/usuario', usersRouter); // CRUD de usuarios y autenticación
 
-// Manejo de errores global
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.status || 500).json({ error: err.message || 'Ocurrió un error en el servidor' });
-});
+// Middleware para manejo de errores
+app.use(errorHandler);
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
